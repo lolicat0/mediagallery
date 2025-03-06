@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VR Media Gallery</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+        }
+        
+        /* Welcome Page Styles */
+        #welcome-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s ease;
+        }
+        
+        #welcome-title {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        #welcome-subtitle {
+            font-size: 1.5em;
+            margin-bottom: 40px;
+            color: #aaa;
+        }
+        
+        #enter-button {
+            padding: 15px 30px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        #enter-button:hover {
+            background-color: #45a049;
+        }
+        
+        /* Main App Styles */
+        #app-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+        }
+        
+        #sidebar {
+            position: fixed;
+            width: 250px;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            overflow-y: auto;
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
+        
+        #sidebar-toggle {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px;
+            z-index: 11;
+            cursor: pointer;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .category {
+            margin: 15px 0;
+            padding: 0 10px;
+        }
+        
+        .category-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+            padding-left: 10px;
+        }
+        
+        .item {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #333;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .item:hover {
+            background-color: #444;
+        }
+        
+        #vr-scene {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .control-button {
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Upload Modal */
+        #upload-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: #222;
+            padding: 30px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+        }
+        
+        .close-button {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #333;
+            color: #fff;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #333;
+            color: #fff;
+        }
+        
+        .submit-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        #hd-toggle {
+            position: fixed;
+            right: 20px;
+            bottom: 80px;
+            padding: 10px;
+            border: none;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 4px;
+            z-index: 10;
+        }
+        
+        #audio-toggle {
+            position: fixed;
+            right: 20px;
+            bottom: 130px;
+            padding: 10px;
+            border: none;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            z-index: 10;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Navigation controls */
+        #vr-navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 10;
+        }
+        
+        .nav-button {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #vr-mode {
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 2px solid #ff4c4c;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .vr-indicator {
+            width: 12px;
+            height: 12px;
+            background-color: #ff4c4c;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        #fullscreen-toggle {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            z-index: 10;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome/Greeting Page -->
+    <div id="welcome-page">
+        <h1 id="welcome-title">Welcome to VR Media Gallery</h1>
+        <p id="welcome-subtitle">Experience your media in full VR on Oculus Quest 3</p>
+        <button id="enter-button">Enter Gallery</button>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="app-container">
+        <!-- Sidebar Toggle Button -->
+        <button id="sidebar-toggle">☰</button>
+        
+        <!-- Sidebar Menu -->
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <h2>Media Gallery</h2>
+            </div>
+            
+            <!-- Images Category -->
+            <div class="category" id="images-category">
+                <h3 class="category-title">Images</h3>
+                <div class="item" data-type="image" data-src="assets/images/fountain.jpeg">Fountain</div>
+                <div class="item" data-type="image" data-src="assets/images/enterance.jpeg">Entrance</div>
+                <div class="item" data-type="image" data-src="assets/images/classroom.jpeg">Class Room</div>
+                <div class="item" data-type="image" data-src="assets/images/ground.jpeg">Ground</div>
+                <div class="item" data-type="image" data-src="assets/images/meetingroom.jpeg">Meeting Room</div>
+                <div class="item" data-type="image" data-src="assets/images/arvrlab.jpeg">ARVR Laboratory</div>
+            </div>
+            
+            <!-- Videos Category -->
+            <div class="category" id="videos-category">
+                <h3 class="category-title">Videos</h3>
+                <div class="item" data-type="video" data-src="assets/videos/ocean.mp4">Ocean Waves</div>
+                <div class="item" data-type="video" data-src="assets/videos/drone.mp4">Drone Flight</div>
+                <div class="item" data-type="video" data-src="assets/videos/waterfall.mp4">Waterfall</div>
+                <div class="item" data-type="video" data-src="assets/videos/storm.mp4">Storm Clouds</div>
+            </div>
+            
+            <!-- Upload Button -->
+            <div style="padding: 20px; text-align: center;">
+                <button id="upload-button" style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Upload New Media
+                </button>
+            </div>
+        </div>
+        
+        <!-- A-Frame VR Scene -->
+        <a-scene id="vr-scene" embedded>
+            <a-assets>
+                <!-- Default Sky -->
+                <img id="default-sky" src="assets/textures/night-sky.jpg">
+                
+                <!-- Default Video -->
+                <video id="default-video" src="" preload="auto" crossorigin="anonymous"></video>
+            </a-assets>
+            
+            <!-- Environment -->
+            <a-sky id="sky" src="#default-sky" rotation="0 -90 0"></a-sky>
+            
+            <!-- Media Display Entities -->
+            <a-entity id="media-container" position="0 1.6 -3">
+                <!-- Dynamic content will be added here -->
+                <a-image id="image-display" visible="false" position="0 0 0" width="4" height="2.25"></a-image>
+                <a-video id="video-display" visible="false" src="#default-video" position="0 0 0" width="4" height="2.25"></a-video>
+            </a-entity>
+            
+            <!-- Camera and Controls -->
+            <a-entity camera position="0 1.6 0" look-controls wasd-controls>
+                <a-cursor color="#4CAF50"></a-cursor>
+            </a-entity>
+        </a-scene>
+        
+        <!-- Additional Controls -->
+        <div id="controls">
+            <button class="control-button" id="zoom-in">+</button>
+            <button class="control-button" id="zoom-out">-</button>
+            <button class="control-button" id="reset-view">⟲</button>
+        </div>
+        
+        <!-- HD Toggle Button -->
+        <button id="hd-toggle">HD</button>
+        
+        <!-- Audio Toggle Button -->
+        <button id="audio-toggle">
+            <span id="audio-icon">🔊</span>
+        </button>
+        
+        <!-- VR Navigation Controls -->
+        <div id="vr-navigation">
+            <button class="nav-button" id="prev-media">◀</button>
+            <button id="vr-mode"><span class="vr-indicator"></span>VR</button>
+            <button class="nav-button" id="next-media">▶</button>
+        </div>
+        
+        <!-- Fullscreen Toggle -->
+        <button id="fullscreen-toggle">⛶</button>
+    </div>
+    
+    <!-- Upload Modal -->
+    <div id="upload-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload Media</h2>
+                <button class="close-button" id="close-modal">×</button>
+            </div>
+            
+            <form id="upload-form">
+                <div class="form-group">
+                    <label class="form-label" for="media-title">Title</label>
+                    <input type="text" id="media-title" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="media-type">Type</label>
+                    <select id="media-type" class="form-select" required>
+                        <option value="image">Image</option>
+                        <option value="video">Video</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="media-file">File</label>
+                    <input type="file" id="media-file" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="media-category">Category</label>
+                    <select id="media-category" class="form-select" required>
+                        <option value="none">Select Category</option>
+                        <option value="new">Create New Category</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="new-category-group" style="display: none;">
+                    <label class="form-label" for="new-category-name">New Category Name</label>
+                    <input type="text" id="new-category-name" class="form-input">
+                </div>
+                
+                <button type="submit" class="submit-button">Upload</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Media data storage
+        const mediaData = {
+            images: [
+                { title: "Fountain", src: "assets/images/fountain.jpeg", category: "Images" },
+                { title: "Entrance", src: "assets/images/enterance.jpeg", category: "Images" },
+                { title: "Class Room", src: "assets/images/classroom.jpeg", category: "Images" },
+                { title: "Ground", src: "assets/images/ground.jpeg", category: "Images" },
+                { title: "Meeting Room", src: "assets/images/meetingroom.jpeg", category: "Images" },
+                { title: "ARVR Laboratory", src: "assets/images/arvrlab.jpeg", category: "Images" }
+            ],
+            videos: [
+                { title: "Ocean Waves", src: "assets/videos/ocean.mp4", category: "Videos" },
+                { title: "Drone Flight", src: "assets/videos/drone.mp4", category: "Videos" },
+                { title: "Waterfall", src: "assets/videos/waterfall.mp4", category: "Videos" },
+                { title: "Storm Clouds", src: "assets/videos/storm.mp4", category: "Videos" }
+            ],
+            categories: ["Images", "Videos"]
+        };
+        
+        // Current media tracking
+        let currentMediaType = null;
+        let currentMediaIndex = 0;
+        let currentCategoryMediaList = [];
+        let sidebarVisible = true;
+        let isFullscreen = false;
+        let audioEnabled = true;
+        let hdEnabled = true;
+        
+        // Initialize the application
+        document.addEventListener("DOMContentLoaded", function() {
+            // Welcome page functionality
+            const welcomePage = document.getElementById("welcome-page");
+            const enterButton = document.getElementById("enter-button");
+            const appContainer = document.getElementById("app-container");
+            
+            enterButton.addEventListener("click", function() {
+                welcomePage.style.opacity = "0";
+                setTimeout(() => {
+                    welcomePage.style.display = "none";
+                    appContainer.style.display = "block";
+                    // Initialize sidebar
+                    updateSidebar();
+                }, 1000);
+            });
+            
+            // Sidebar Toggle
+            const sidebarToggle = document.getElementById("sidebar-toggle");
+            const sidebar = document.getElementById("sidebar");
+            
+            sidebarToggle.addEventListener("click", function() {
+                if (sidebarVisible) {
+                    sidebar.style.transform = "translateX(-100%)";
+                    sidebarVisible = false;
+                } else {
+                    sidebar.style.transform = "translateX(0)";
+                    sidebarVisible = true;
+                }
+            });
+            
+            // Media item click handler
+            document.querySelectorAll(".item").forEach(item => {
+                item.addEventListener("click", function() {
+                    const mediaType = this.getAttribute("data-type");
+                    const mediaSrc = this.getAttribute("data-src");
+                    loadMedia(mediaType, mediaSrc, this.textContent.trim());
+                });
+            });
+            
+            // Upload functionality
+            const uploadButton = document.getElementById("upload-button");
+            const uploadModal = document.getElementById("upload-modal");
+            const closeModal = document.getElementById("close-modal");
+            const uploadForm = document.getElementById("upload-form");
+            const mediaCategory = document.getElementById("media-category");
+            const newCategoryGroup = document.getElementById("new-category-group");
+            
+            uploadButton.addEventListener("click", function() {
+                // Populate category dropdown
+                updateCategoryDropdown();
+                uploadModal.style.display = "flex";
+            });
+            
+            closeModal.addEventListener("click", function() {
+                uploadModal.style.display = "none";
+            });
+            
+            mediaCategory.addEventListener("change", function() {
+                if (this.value === "new") {
+                    newCategoryGroup.style.display = "block";
+                } else {
+                    newCategoryGroup.style.display = "none";
+                }
+            });
+            
+            uploadForm.addEventListener("submit", function(e) {
+                e.preventDefault();
+                
+                const title = document.getElementById("media-title").value;
+                const type = document.getElementById("media-type").value;
+                const file = document.getElementById("media-file").files[0];
+                let category = document.getElementById("media-category").value;
+                
+                if (category === "new") {
+                    category = document.getElementById("new-category-name").value;
+                    // Add the new category to our data structure
+                    if (!mediaData.categories.includes(category)) {
+                        mediaData.categories.push(category);
+                    }
+                }
+                
+                // In a real application, we would upload the file to the server here
+                // For now, we'll create a temporary URL and add it to our mediaData
+                const tempURL = URL.createObjectURL(file);
+                
+                const newMedia = {
+                    title: title,
+                    src: tempURL,
+                    category: category
+                };
+                
+                if (type === "image") {
+                    mediaData.images.push(newMedia);
+                } else {
+                    mediaData.videos.push(newMedia);
+                }
+                
+                // Update the sidebar to show the new media
+                updateSidebar();
+                
+                // Close the modal
+                uploadModal.style.display = "none";
+                
+                // Clear the form
+                uploadForm.reset();
+                newCategoryGroup.style.display = "none";
+                
+                // Load the newly uploaded media
+                loadMedia(type, tempURL, title);
+            });
+            
+            // VR mode toggle
+            const vrModeButton = document.getElementById("vr-mode");
+            vrModeButton.addEventListener("click", function() {
+                const scene = document.querySelector('a-scene');
+                scene.enterVR();
+            });
+            
+            // Media navigation
+            const prevButton = document.getElementById("prev-media");
+            const nextButton = document.getElementById("next-media");
+            
+            prevButton.addEventListener("click", function() {
+                navigateMedia(-1);
+            });
+            
+            nextButton.addEventListener("click", function() {
+                navigateMedia(1);
+            });
+            
+            // Zoom controls
+            const zoomInButton = document.getElementById("zoom-in");
+            const zoomOutButton = document.getElementById("zoom-out");
+            const resetViewButton = document.getElementById("reset-view");
+            const mediaContainer = document.getElementById("media-container");
+            
+            zoomInButton.addEventListener("click", function() {
+                const currentScale = getEntityScale(mediaContainer);
+                mediaContainer.setAttribute("scale", `${currentScale.x * 1.2} ${currentScale.y * 1.2} ${currentScale.z * 1.2}`);
+            });
+            
+            zoomOutButton.addEventListener("click", function() {
+                const currentScale = getEntityScale(mediaContainer);
+                mediaContainer.setAttribute("scale", `${currentScale.x * 0.8} ${currentScale.y * 0.8} ${currentScale.z * 0.8}`);
+            });
+            
+            resetViewButton.addEventListener("click", function() {
+                mediaContainer.setAttribute("scale", "1 1 1");
+                mediaContainer.setAttribute("position", "0 1.6 -3");
+                mediaContainer.setAttribute("rotation", "0 0 0");
+            });
+            
+            // HD Toggle
+            const hdToggle = document.getElementById("hd-toggle");
+            hdToggle.addEventListener("click", function() {
+                hdEnabled = !hdEnabled;
+                hdToggle.style.backgroundColor = hdEnabled ? "rgba(76, 175, 80, 0.5)" : "rgba(0, 0, 0, 0.5)";
+                
+                // In a real application, we would change the quality of the media here
+                // For now, just update the text
+                hdToggle.textContent = hdEnabled ? "HD" : "SD";
+            });
+            
+            // Audio Toggle
+            const audioToggle = document.getElementById("audio-toggle");
+            const audioIcon = document.getElementById("audio-icon");
+            
+            audioToggle.addEventListener("click", function() {
+                audioEnabled = !audioEnabled;
+                audioIcon.textContent = audioEnabled ? "🔊" : "🔇";
+                
+                // Mute/unmute video if one is playing
+                const videoElement = document.querySelector("#default-video");
+                if (videoElement) {
+                    videoElement.muted = !audioEnabled;
+                }
+            });
+            
+            // Fullscreen Toggle
+            const fullscreenToggle = document.getElementById("fullscreen-toggle");
+            fullscreenToggle.addEventListener("click", function() {
+                if (!isFullscreen) {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.mozRequestFullScreen) {
+                        document.documentElement.mozRequestFullScreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) {
+                        document.documentElement.webkitRequestFullscreen();
+                    } else if (document.documentElement.msRequestFullscreen) {
+                        document.documentElement.msRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
+                isFullscreen = !isFullscreen;
+            });
+            
+            // Keyboard navigation
+            document.addEventListener("keydown", function(e) {
+                if (e.key === "ArrowLeft") {
+                    navigateMedia(-1);
+                } else if (e.key === "ArrowRight") {
+                    navigateMedia(1);
+                } else if (e.key === "Escape") {
+                    if (uploadModal.style.display === "flex") {
+                        uploadModal.style.display = "none";
+                    }
+                }
+            });
+            
+            // Initialize with the first image
+            if (mediaData.images.length > 0) {
+                loadMedia("image", mediaData.images[0].src, mediaData.images[0].title);
+            }
+        });
+        
+        // Helper Functions
+        function updateSidebar() {
+            // Clear existing categories
+            const sidebar = document.getElementById("sidebar");
+            const sidebarHeader = sidebar.querySelector(".sidebar-header");
+            
+            // Remove all existing categories
+            const existingCategories = sidebar.querySelectorAll(".category");
+            existingCategories.forEach(category => category.remove());
+            
+            // Create categories and add media items
+            mediaData.categories.forEach(categoryName => {
+                // Create category element
+                const categoryElement = document.createElement("div");
+                categoryElement.className = "category";
+                categoryElement.id = `${categoryName.toLowerCase()}-category`;
+                
+                // Create category title
+                const categoryTitle = document.createElement("h3");
+                categoryTitle.className = "category-title";
+                categoryTitle.textContent = categoryName;
+                categoryElement.appendChild(categoryTitle);
+                
+                // Add media items to the category
+                const categoryItems = [...mediaData.images, ...mediaData.videos].filter(item => item.category === categoryName);
+                
+                categoryItems.forEach(item => {
+                    const itemElement = document.createElement("div");
+                    itemElement.className = "item";
+                    itemElement.setAttribute("data-type", item.src.endsWith(".mp4") ? "video" : "image");
+                    itemElement.setAttribute("data-src", item.src);
+                    itemElement.textContent = item.title;
+                    
+                    // Add click event
+                    itemElement.addEventListener("click", function() {
+                        const mediaType = this.getAttribute("data-type");
+                        const mediaSrc = this.getAttribute("data-src");
+                        loadMedia(mediaType, mediaSrc, this.textContent.trim());
+                    });
+                    
+                    categoryElement.appendChild(itemElement);
+                });
+                
+                // Add the category to the sidebar
+                sidebar.insertBefore(categoryElement, sidebar.lastElementChild);
+            });
+            
+            // Add Upload Button if it doesn't exist
+            if (!document.getElementById("upload-button")) {
+                const uploadDiv = document.createElement("div");
+                uploadDiv.style.padding = "20px";
+                uploadDiv.style.textAlign = "center";
+                
+                const uploadButton = document.createElement("button");
+                uploadButton.id = "upload-button";
+                uploadButton.style.width = "100%";
+                uploadButton.style.padding = "10px";
+                uploadButton.style.backgroundColor = "#4CAF50";
+                uploadButton.style.color = "white";
+                uploadButton.style.border = "none";
+                uploadButton.style.borderRadius = "4px";
+                uploadButton.style.cursor = "pointer";
+                uploadButton.textContent = "Upload New Media";
+                
+                uploadButton.addEventListener("click", function() {
+                    // Populate category dropdown
+                    updateCategoryDropdown();
+                    document.getElementById("upload-modal").style.display = "flex";
+                });
+                
+                uploadDiv.appendChild(uploadButton);
+                sidebar.appendChild(uploadDiv);
+            }
+        }
+        
+        function updateCategoryDropdown() {
+            const categoryDropdown = document.getElementById("media-category");
+            
+            // Clear existing options
+            categoryDropdown.innerHTML = "";
+            
+            // Add default options
+            const noneOption = document.createElement("option");
+            noneOption.value = "none";
+            noneOption.textContent = "Select Category";
+            categoryDropdown.appendChild(noneOption);
+            
+            const newOption = document.createElement("option");
+            newOption.value = "new";
+            newOption.textContent = "Create New Category";
+            categoryDropdown.appendChild(newOption);
+            
+            // Add existing categories
+            mediaData.categories.forEach(category => {
+                const option = document.createElement("option");
+                option.value = category;
+                option.textContent = category;
+                categoryDropdown.appendChild(option);
+            });
+        }
+        
+        function loadMedia(type, src, title) {
+            const imageDisplay = document.getElementById("image-display");
+            const videoDisplay = document.getElementById("video-display");
+            const defaultVideo = document.getElementById("default-video");
+            
+            // Hide both displays initially
+            imageDisplay.setAttribute("visible", "false");
+            videoDisplay.setAttribute("visible", "false");
+            
+            // Update navigation state
+            currentMediaType = type;
+            
+            // Find the current media index
+            if (type === "image") {
+                currentCategoryMediaList = mediaData.images;
+            } else {
+                currentCategoryMediaList = mediaData.videos;
+            }
+            
+            currentMediaIndex = currentCategoryMediaList.findIndex(item => item.src === src);
+            
+            // Display the selected media
+            if (type === "image") {
+                // Show image
+                imageDisplay.setAttribute("src", src);
+                imageDisplay.setAttribute("visible", "true");
+            } else if (type === "video") {
+                // Update video source
+                defaultVideo.src = src;
+                defaultVideo.load(); // Reload with new source
+                defaultVideo.muted = !audioEnabled; // Apply current audio setting
+                defaultVideo.play(); // Auto-play
+                
+                // Show video display
+                videoDisplay.setAttribute("visible", "true");
+            }
+            
+            // Update document title with the media title
+            document.title = `VR Media Gallery - ${title}`;
+        }
+        
+        function navigateMedia(direction) {
+            if (!currentCategoryMediaList.length) return;
+            
+            // Calculate new index
+            let newIndex = currentMediaIndex + direction;
+            
+            // Wrap around if needed
+            if (newIndex < 0) {
+                newIndex = currentCategoryMediaList.length - 1;
+            } else if (newIndex >= currentCategoryMediaList.length) {
+                newIndex = 0;
+            }
+            
+            // Load the new media
+            const newMedia = currentCategoryMediaList[newIndex];
+            loadMedia(currentMediaType, newMedia.src, newMedia.title);
+        }
+        
+        function getEntityScale(entity) {
+            const scaleAttr = entity.getAttribute("scale");
+            if (scaleAttr) {
+                return scaleAttr;
+            } else {
+                return { x: 1, y: 1, z: 1 };
+            }
+        }
+        
+        // Handle Oculus Quest 3 specific detection and optimization
+        function detectVRDevice() {
+            if (navigator.xr) {
+                navigator.xr.isSessionSupported('immersive-vr')
+                    .then(supported => {
+                        if (supported) {
+                            // Check if it's likely Oculus Quest 3
+                            navigator.userAgent.includes("Oculus")
+                                ? optimizeForQuest3()
+                                : console.log("VR supported but not Oculus Quest 3");
+                        } else {
+                            console.log("VR not supported on this device");
+                        }
+                    });
+            }
+        }
+        
+        function optimizeForQuest3() {
+            console.log("Optimizing for Oculus Quest 3");
+            
+            // Set higher quality rendering for Quest 3
+            const scene = document.querySelector('a-scene');
+            
+            // Increase renderer pixel ratio for better quality
+            if (scene.renderer) {
+                scene.renderer.setPixelRatio(1.5);
+            }
+            
+            // Add Quest 3 specific controller models and interactions
+            const camera = document.querySelector('[camera]');
+            
+            // Add controller entities if they don't exist
+            if (!document.querySelector('#left-controller')) {
+                const leftController = document.createElement('a-entity');
+                leftController.id = 'left-controller';
+                leftController.setAttribute('oculus-touch-controls', 'hand: left');
+                scene.appendChild(leftController);
+            }
+            
+            if (!document.querySelector('#right-controller')) {
+                const rightController = document.createElement('a-entity');
+                rightController.id = 'right-controller';
+                rightController.setAttribute('oculus-touch-controls', 'hand: right');
+                scene.appendChild(rightController);
+            }
+            
+            // Update UI to indicate Quest 3 mode
+            const vrModeButton = document.getElementById('vr-mode');
+            vrModeButton.innerHTML = '<span class="vr-indicator"></span>Quest 3 VR';
+            
+            // Set higher quality for videos and images
+            hdEnabled = true;
+            document.getElementById('hd-toggle').textContent = 'HD';
+            document.getElementById('hd-toggle').style.backgroundColor = "rgba(76, 175, 80, 0.5)";
+        }
+        
+        // Call VR detection on page load
+        window.addEventListener('load', detectVRDevice);
+        
+        // Add controller interaction script
+        AFRAME.registerComponent('controller-listener', {
+            init: function() {
+                const el = this.el;
+                
+                // Listen for controller button presses
+                el.addEventListener('triggerdown', function() {
+                    // Trigger click on currently highlighted item
+                    const cursor = document.querySelector('[cursor]');
+                    const intersectedEl = cursor.components.cursor.intersectedEl;
+                    
+                    if (intersectedEl && intersectedEl.classList.contains('item')) {
+                        intersectedEl.click();
+                    }
+                });
+                
+                // Navigation with thumbstick
+                el.addEventListener('thumbstickmoved', function(e) {
+                    // X-axis movement controls media navigation
+                    if (Math.abs(e.detail.x) > 0.7) {
+                        if (e.detail.x > 0 && !this.thumbstickActive) {
+                            navigateMedia(1);
+                            this.thumbstickActive = true;
+                        } else if (e.detail.x < 0 && !this.thumbstickActive) {
+                            navigateMedia(-1);
+                            this.thumbstickActive = true;
+                        }
+                    } else {
+                        this.thumbstickActive = false;
+                    }
+                    
+                    // Y-axis movement could control zoom
+                    if (Math.abs(e.detail.y) > 0.7) {
+                        const mediaContainer = document.getElementById("media-container");
+                        const currentScale = getEntityScale(mediaContainer);
+                        
+                        if (e.detail.y < 0 && !this.thumbstickZoomActive) {
+                            // Zoom in
+                            mediaContainer.setAttribute("scale", `${currentScale.x * 1.1} ${currentScale.y * 1.1} ${currentScale.z * 1.1}`);
+                            this.thumbstickZoomActive = true;
+                        } else if (e.detail.y > 0 && !this.thumbstickZoomActive) {
+                            // Zoom out
+                            mediaContainer.setAttribute("scale", `${currentScale.x * 0.9} ${currentScale.y * 0.9} ${currentScale.z * 0.9}`);
+                            this.thumbstickZoomActive = true;
+                        }
+                    } else {
+                        this.thumbstickZoomActive = false;
+                    }
+                });
+            }
+        });
+        
+        // Add controller component to the camera
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add controller listener to camera
+            const camera = document.querySelector('[camera]');
+            camera.setAttribute('controller-listener', '');
+        });
+        
+        // Handle browser resize
+        window.addEventListener('resize', function() {
+            // Update UI or layouts if needed
+            const appContainer = document.getElementById('app-container');
+            if (appContainer.style.display !== 'none') {
+                // Adjust UI elements based on window size
+                if (window.innerWidth < 768) {
+                    // Mobile mode
+                    document.getElementById('sidebar').style.width = '100%';
+                    sidebarVisible = false;
+                    document.getElementById('sidebar').style.transform = 'translateX(-100%)';
+                } else {
+                    // Desktop mode
+                    document.getElementById('sidebar').style.width = '250px';
+                }
+            }
+        });
+        
+        // Create folder structure and placeholder files on first load
+        function createInitialFileStructure() {
+            // In a real application, this would be handled on the server
+            // Here we'll just log to console as if we created the structure
+            console.log("Creating initial folder structure:");
+            console.log("- assets/");
+            console.log("  - images/");
+            console.log("    - fountain.jpeg");
+            console.log("    - enterance.jpeg");
+            console.log("    - classroom.jpeg");
+            console.log("    - ground.jpeg");
+            console.log("    - meetingroom.jpeg");
+            console.log("    - arvrlab.jpeg");
+            console.log("  - videos/");
+            console.log("    - ocean.mp4");
+            console.log("    - drone.mp4");
+            console.log("    - waterfall.mp4");
+            console.log("    - storm.mp4");
+            console.log("  - textures/");
+            console.log("    - night-sky.jpg");
+            
+            // In a full implementation, we would create these files or check if they exist
+        }
+        
+        // Call this function when the app first loads
+        createInitialFileStructure();
+    </script>
+</body>
+</html>
